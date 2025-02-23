@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -12,6 +11,7 @@ import ExplorePage from "./ExplorePage";
 import { AudioPlayerProvider } from "@/contexts/AudioPlayerContext";
 import { HomeTab } from "@/components/dashboard/HomeTab";
 import { ProfileTab } from "@/components/dashboard/ProfileTab";
+import { Radio, Github } from "lucide-react";
 
 export default function Dashboard() {
   const { signOut } = useAuth();
@@ -19,12 +19,25 @@ export default function Dashboard() {
   return (
     <AudioPlayerProvider>
       <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto p-8 pb-32">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex justify-between items-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-            <Button onClick={signOut} variant="outline">
-              Sign Out
-            </Button>
+            <div className="flex items-center gap-2">
+              <Radio className="h-6 w-6 text-primary" />
+              <span className="text-xl font-bold text-gray-900">rsswave</span>
+            </div>
+            <div className="flex items-center gap-4">
+              <a 
+                href="https://github.com/ajaymalik14/rsswave"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-600 hover:text-gray-900"
+              >
+                <Github className="h-5 w-5" />
+              </a>
+              <Button onClick={signOut} variant="outline">
+                Sign Out
+              </Button>
+            </div>
           </div>
 
           <Tabs defaultValue="home" className="space-y-6">
