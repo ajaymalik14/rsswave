@@ -30,9 +30,7 @@ export default function AudioLibraryPage() {
     setPlayerQueue,
     currentQueueIndex,
     setCurrentQueueIndex,
-    playerAudioRef,
-    handlePlayNext,
-    handlePlayPrevious
+    playerAudioRef
   } = useAudioPlayer();
 
   const { data: articles } = useQuery({

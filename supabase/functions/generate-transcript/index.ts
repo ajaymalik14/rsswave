@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
@@ -48,6 +47,22 @@ async function fetchArticleContent(url: string): Promise<string | null> {
   }
 }
 
+function cleanTranscriptText(text: string): string {
+  return text
+    // Remove **text** patterns
+    .replace(/\*\*[^*]+\*\*/g, '')
+    // Remove [text] patterns
+    .replace(/\[[^\]]+\]/g, '')
+    // Remove any remaining asterisks
+    .replace(/\*/g, '')
+    // Remove any remaining brackets
+    .replace(/[\[\]]/g, '')
+    // Clean up multiple newlines and spaces
+    .replace(/\n{3,}/g, '\n\n')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 async function processArticle(
   article: { id: string; title: string; content: string | null; url: string },
   geminiApiKey: string,
@@ -77,7 +92,8 @@ async function processArticle(
       body: JSON.stringify({
         contents: [{
           parts: [{
-            text: `Convert this article into a radio-ready script. Make it engaging and easy to read aloud:
+            text: `Convert this article into a radio-ready script without starting greeting or special attention and without ending with a question.
+
 
             Title: ${article.title}
 
@@ -99,13 +115,16 @@ async function processArticle(
     }
 
     const data = await response.json();
-    const transcript = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    let transcript = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
     if (!transcript) {
       throw new Error('No transcript generated from Gemini API');
     }
 
-    console.log('Updating article with transcript...');
+    // Clean the transcript before saving
+    transcript = cleanTranscriptText(transcript);
+
+    console.log('Updating article with cleaned transcript...');
     const { error: updateError } = await supabaseClient
       .from('articles')
       .update({ transcript })
