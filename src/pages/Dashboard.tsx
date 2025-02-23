@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import AIFetchPage from "./AIFetchPage";
 import ListenPage from "./ListenPage";
 import AudioLibraryPage from "./AudioLibraryPage";
 import { AudioPlayerProvider } from "@/contexts/AudioPlayerContext";
+import { HomeTab } from "@/components/dashboard/HomeTab";
 
 export default function Dashboard() {
   const { signOut } = useAuth();
@@ -23,14 +25,19 @@ export default function Dashboard() {
             </Button>
           </div>
 
-          <Tabs defaultValue="feeds" className="space-y-6">
+          <Tabs defaultValue="home" className="space-y-6">
             <TabsList>
+              <TabsTrigger value="home">Home</TabsTrigger>
               <TabsTrigger value="feeds">Feeds</TabsTrigger>
               <TabsTrigger value="articles">Articles</TabsTrigger>
               <TabsTrigger value="ai">AI Fetch</TabsTrigger>
               <TabsTrigger value="listen">Listen</TabsTrigger>
               <TabsTrigger value="library">Audio Library</TabsTrigger>
             </TabsList>
+
+            <TabsContent value="home" className="space-y-6">
+              <HomeTab />
+            </TabsContent>
 
             <TabsContent value="feeds" className="space-y-6">
               <FeedsPage />
