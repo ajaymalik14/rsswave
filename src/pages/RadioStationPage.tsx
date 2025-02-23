@@ -8,18 +8,27 @@ import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Radio, FileText, FileAudio } from "lucide-react";
 import { format } from "date-fns";
 
+type RadioCategory = "News" | "Technology" | "Business" | "Entertainment" | "Sports" | "Science" | "Education";
+
 interface RadioStation {
   id: string;
   name: string;
   image_url: string | null;
   created_at: string;
-  category: string | null;
+  category: RadioCategory | null;
   tags: string[];
   user_id: string;
   profiles: {
-    full_name: string;
+    full_name: string | null;
     avatar_url: string | null;
-  };
+  } | null;
+}
+
+interface RadioFeed {
+  id: string;
+  title: string;
+  url: string;
+  radio_station_id: string;
 }
 
 interface Article {
@@ -50,10 +59,11 @@ export default function RadioStationPage() {
           )
         `)
         .eq('id', id)
-        .single();
+        .maybeSingle();
       
       if (error) throw error;
-      return data as RadioStation;
+      if (!data) throw new Error('Radio station not found');
+      return data as unknown as RadioStation;
     }
   });
 
@@ -66,7 +76,7 @@ export default function RadioStationPage() {
         .eq('radio_station_id', id);
       
       if (error) throw error;
-      return data;
+      return data as RadioFeed[];
     }
   });
 
@@ -74,6 +84,8 @@ export default function RadioStationPage() {
     queryKey: ['radio-articles', id],
     queryFn: async () => {
       const feedIds = feeds?.map(feed => feed.id) || [];
+      if (feedIds.length === 0) return [];
+      
       const { data, error } = await supabase
         .from('articles')
         .select('*')
@@ -103,7 +115,7 @@ export default function RadioStationPage() {
             <div>
               <h1 className="text-2xl font-bold">{station.name}</h1>
               <div className="flex items-center gap-2 mt-2 text-muted-foreground">
-                <p>Created by {station.profiles?.full_name}</p>
+                <p>Created by {station.profiles?.full_name || 'Unknown'}</p>
                 {station.category && <p>• {station.category}</p>}
               </div>
               {station.tags && station.tags.length > 0 && (
