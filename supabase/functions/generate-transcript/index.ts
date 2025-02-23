@@ -94,7 +94,9 @@ async function processArticle(
           parts: [{
             text: `Convert this article into a radio-ready script without starting greeting or special attention and without ending with a question.
 
+  
 
+            
             Title: ${article.title}
 
             Content: ${content.substring(0, 30000)}`, // Limit content length to avoid token limits
