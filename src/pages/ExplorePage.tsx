@@ -3,9 +3,10 @@ import React from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface CuratedFeed {
   id: string;
@@ -23,18 +24,19 @@ interface UserFeed {
 export default function ExplorePage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   // Fetch curated feeds
   const { data: curatedFeeds, isLoading: isLoadingCurated } = useQuery({
     queryKey: ["curated-feeds"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: curatedFeedsData, error } = await supabase
         .from("curated_feeds")
-        .select("*")
-        .order("category", { ascending: true });
+        .select()
+        .returns<CuratedFeed[]>();
 
       if (error) throw error;
-      return data as CuratedFeed[];
+      return curatedFeedsData;
     },
   });
 
@@ -42,12 +44,13 @@ export default function ExplorePage() {
   const { data: userFeeds } = useQuery({
     queryKey: ["feeds"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: userFeedsData, error } = await supabase
         .from("feeds")
-        .select("id, url");
+        .select("id, url")
+        .returns<UserFeed[]>();
 
       if (error) throw error;
-      return data as UserFeed[];
+      return userFeedsData;
     },
   });
 
@@ -56,11 +59,12 @@ export default function ExplorePage() {
     mutationFn: async (feed: CuratedFeed) => {
       const { error } = await supabase
         .from("feeds")
-        .insert([{
+        .insert({
           url: feed.url,
           title: feed.title,
-          description: feed.description
-        }]);
+          description: feed.description,
+          user_id: user?.id
+        });
 
       if (error) throw error;
     },

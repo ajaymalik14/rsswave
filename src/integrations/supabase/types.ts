@@ -59,6 +59,33 @@ export type Database = {
           },
         ]
       }
+      curated_feeds: {
+        Row: {
+          category: string
+          created_at: string | null
+          description: string | null
+          id: string
+          title: string
+          url: string
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          title: string
+          url: string
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          title?: string
+          url?: string
+        }
+        Relationships: []
+      }
       feeds: {
         Row: {
           created_at: string | null
