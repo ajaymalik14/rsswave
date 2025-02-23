@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,32 +31,14 @@ export function HomeTab() {
     currentPlayingArticle 
   } = useAudioPlayer();
 
-  const fetchArticles = async () => {
-    const { data, error } = await supabase
-      .from("articles")
-      .select("*")
-      .order("published_at", { ascending: false });
-
-    if (error) throw error;
-    return data as Article[];
-  };
-
-  const { data: articles } = useQuery({
-    queryKey: ["articles"],
-    queryFn: fetchArticles,
-  });
-
-  const { data: profile } = useQuery({
-    queryKey: ["profile"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .single();
-
+  const fetchArticlesMutation = useMutation({
+    mutationFn: async (feedId: string) => {
+      const { data, error } = await supabase.functions.invoke('fetch-articles', {
+        body: { feedId }
+      });
       if (error) throw error;
       return data;
-    },
+    }
   });
 
   const generateTranscriptMutation = useMutation({
@@ -65,7 +46,6 @@ export function HomeTab() {
       const { data, error } = await supabase.functions.invoke("generate-transcript", {
         body: { articleId }
       });
-      
       if (error) throw error;
       return data;
     },
@@ -75,12 +55,11 @@ export function HomeTab() {
     mutationFn: async ({ articleId }: { articleId: string }) => {
       const { data, error } = await supabase.functions.invoke("generate-audio", {
         body: {
-          voice_id: "21m00Tcm4TlvDq8ikWAM", // Using Rachel's voice as default
+          voice_id: "21m00Tcm4TlvDq8ikWAM",
           model_id: "eleven_multilingual_v2",
           articleId: articleId
         }
       });
-
       if (error) throw error;
       if (!data.audio_url) throw new Error("No audio URL received");
       return data.audio_url;
@@ -171,22 +150,50 @@ export function HomeTab() {
       return;
     }
 
-    // Fetch latest articles
+    setIsProcessing(true);
+    setCurrentStatus("Fetching feeds...");
+
+    // First, get all feeds
+    const { data: feeds, error: feedsError } = await supabase
+      .from("feeds")
+      .select("*");
+
+    if (feedsError || !feeds || feeds.length === 0) {
+      setIsProcessing(false);
+      toast({
+        variant: "destructive",
+        title: "No feeds found",
+        description: "Please add some feeds first in the Feeds tab.",
+      });
+      return;
+    }
+
+    // Fetch articles for each feed
+    setCurrentStatus("Fetching articles from feeds...");
+    try {
+      for (const feed of feeds) {
+        await fetchArticlesMutation.mutateAsync(feed.id);
+      }
+    } catch (error) {
+      console.error("Error fetching articles:", error);
+    }
+
+    // Get all articles after fetching
     const { data: latestArticles, error } = await supabase
       .from("articles")
       .select("*")
       .order("published_at", { ascending: false });
 
     if (error || !latestArticles || latestArticles.length === 0) {
+      setIsProcessing(false);
       toast({
         variant: "destructive",
         title: "No articles found",
-        description: "Please add some feeds and fetch articles first.",
+        description: "Could not fetch any articles from your feeds.",
       });
       return;
     }
 
-    setIsProcessing(true);
     setCurrentStatus("Starting radio processing...");
 
     // Start with any articles that already have audio
@@ -198,7 +205,7 @@ export function HomeTab() {
       setIsPlayingAll(true);
     }
 
-    // Start processing all articles (including ones with audio - they'll be skipped if already processed)
+    // Start processing all articles
     processNextArticle(latestArticles, 0);
   };
 
