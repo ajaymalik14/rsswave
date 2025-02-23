@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -53,7 +52,6 @@ export default function RadioPage() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [editingStation, setEditingStation] = useState<RadioStation | null>(null);
 
-  // Fetch radio stations
   const { data: stations, isLoading } = useQuery({
     queryKey: ['radio-stations'],
     queryFn: async () => {
@@ -67,7 +65,6 @@ export default function RadioPage() {
     }
   });
 
-  // Fetch categories
   const { data: categories } = useQuery({
     queryKey: ['radio-categories'],
     queryFn: async () => {
@@ -79,7 +76,6 @@ export default function RadioPage() {
     }
   });
 
-  // Fetch feeds for each station
   const { data: feeds } = useQuery({
     queryKey: ['radio-feeds'],
     queryFn: async () => {
@@ -92,12 +88,10 @@ export default function RadioPage() {
     }
   });
 
-  // Create/Update station mutation
   const stationMutation = useMutation({
     mutationFn: async ({ formData, stationId }: { formData: StationForm, stationId?: string }) => {
       if (!user) throw new Error('User not authenticated');
 
-      // Handle image upload if there's a new image
       let imageUrl = stationId ? editingStation?.image_url : null;
       if (formData.image) {
         const fileExt = formData.image.name.split('.').pop();
@@ -125,7 +119,6 @@ export default function RadioPage() {
       };
 
       if (stationId) {
-        // Update existing station
         const { data: station, error: stationError } = await supabase
           .from('radio_stations')
           .update(stationData)
@@ -135,7 +128,6 @@ export default function RadioPage() {
 
         if (stationError) throw stationError;
 
-        // Delete existing feeds and insert new ones
         await supabase
           .from('radio_feeds')
           .delete()
@@ -154,7 +146,6 @@ export default function RadioPage() {
         await Promise.all(feedPromises);
         return station;
       } else {
-        // Create new station
         const { data: station, error: stationError } = await supabase
           .from('radio_stations')
           .insert(stationData)
@@ -163,7 +154,6 @@ export default function RadioPage() {
 
         if (stationError) throw stationError;
 
-        // Create feeds
         const feedPromises = formData.feeds.map(feed => 
           supabase
             .from('radio_feeds')
@@ -198,7 +188,6 @@ export default function RadioPage() {
     }
   });
 
-  // Delete station mutation
   const deleteStationMutation = useMutation({
     mutationFn: async (stationId: string) => {
       const { error } = await supabase
@@ -347,7 +336,9 @@ export default function RadioPage() {
               <Label htmlFor="category">Category</Label>
               <Select
                 value={form.category}
-                onValueChange={(value) => setForm(prev => ({ ...prev, category: value }))}
+                onValueChange={(value: RadioCategory | '') => 
+                  setForm(prev => ({ ...prev, category: value }))
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select a category" />
