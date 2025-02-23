@@ -189,26 +189,32 @@ export type Database = {
       }
       radio_stations: {
         Row: {
+          category: Database["public"]["Enums"]["radio_category"] | null
           created_at: string | null
           id: string
           image_url: string | null
           name: string
+          tags: string[] | null
           updated_at: string | null
           user_id: string
         }
         Insert: {
+          category?: Database["public"]["Enums"]["radio_category"] | null
           created_at?: string | null
           id?: string
           image_url?: string | null
           name: string
+          tags?: string[] | null
           updated_at?: string | null
           user_id: string
         }
         Update: {
+          category?: Database["public"]["Enums"]["radio_category"] | null
           created_at?: string | null
           id?: string
           image_url?: string | null
           name?: string
+          tags?: string[] | null
           updated_at?: string | null
           user_id?: string
         }
@@ -219,10 +225,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_radio_categories: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          category: string
+        }[]
+      }
     }
     Enums: {
-      [_ in never]: never
+      radio_category:
+        | "News"
+        | "Technology"
+        | "Business"
+        | "Entertainment"
+        | "Sports"
+        | "Science"
+        | "Education"
     }
     CompositeTypes: {
       [_ in never]: never
