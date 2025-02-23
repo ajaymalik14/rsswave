@@ -160,10 +160,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_radio_categories: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          category: string
+        }[]
+      }
     }
     Enums: {
-      [_ in never]: never
+      radio_category:
+        | "News"
+        | "Technology"
+        | "Business"
+        | "Entertainment"
+        | "Sports"
+        | "Science"
+        | "Education"
     }
     CompositeTypes: {
       [_ in never]: never
