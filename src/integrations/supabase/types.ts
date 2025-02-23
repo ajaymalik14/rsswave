@@ -155,92 +155,15 @@ export type Database = {
         }
         Relationships: []
       }
-      radio_feeds: {
-        Row: {
-          created_at: string | null
-          id: string
-          radio_station_id: string
-          title: string
-          url: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          radio_station_id: string
-          title: string
-          url: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          radio_station_id?: string
-          title?: string
-          url?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "radio_feeds_radio_station_id_fkey"
-            columns: ["radio_station_id"]
-            isOneToOne: false
-            referencedRelation: "radio_stations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      radio_stations: {
-        Row: {
-          category: Database["public"]["Enums"]["radio_category"] | null
-          created_at: string | null
-          id: string
-          image_url: string | null
-          name: string
-          tags: string[] | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          category?: Database["public"]["Enums"]["radio_category"] | null
-          created_at?: string | null
-          id?: string
-          image_url?: string | null
-          name: string
-          tags?: string[] | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          category?: Database["public"]["Enums"]["radio_category"] | null
-          created_at?: string | null
-          id?: string
-          image_url?: string | null
-          name?: string
-          tags?: string[] | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      get_radio_categories: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          category: string
-        }[]
-      }
+      [_ in never]: never
     }
     Enums: {
-      radio_category:
-        | "News"
-        | "Technology"
-        | "Business"
-        | "Entertainment"
-        | "Sports"
-        | "Science"
-        | "Education"
+      [_ in never]: never
     }
     CompositeTypes: {
       [_ in never]: never

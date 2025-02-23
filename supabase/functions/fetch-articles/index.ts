@@ -40,7 +40,7 @@ Deno.serve(async (req) => {
 
     // Get feed URL from database
     const { data: feed, error: feedError } = await supabaseClient
-      .from('radio_feeds')
+      .from('feeds')
       .select('url, id')
       .eq('id', feedId)
       .single();
@@ -75,7 +75,6 @@ Deno.serve(async (req) => {
       content: entry.content?.value || entry.description?.value || null,
       url: entry.links[0]?.href || '',
       published_at: entry.published || new Date().toISOString(),
-      feed_title: feed.title
     }));
 
     console.log('Prepared articles for insertion:', articles.length);
@@ -92,9 +91,9 @@ Deno.serve(async (req) => {
       throw new Error('Failed to insert articles');
     }
 
-    // Update last_fetched timestamp for the feed
+    // Update last_fetched timestamp
     await supabaseClient
-      .from('radio_feeds')
+      .from('feeds')
       .update({ last_fetched: new Date().toISOString() })
       .eq('id', feedId);
 

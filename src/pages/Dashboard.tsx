@@ -9,7 +9,6 @@ import AIFetchPage from "./AIFetchPage";
 import ListenPage from "./ListenPage";
 import AudioLibraryPage from "./AudioLibraryPage";
 import ExplorePage from "./ExplorePage";
-import RadioPage from "./RadioPage";
 import { AudioPlayerProvider } from "@/contexts/AudioPlayerContext";
 import { HomeTab } from "@/components/dashboard/HomeTab";
 import { ProfileTab } from "@/components/dashboard/ProfileTab";
@@ -37,7 +36,6 @@ export default function Dashboard() {
               <TabsTrigger value="ai">AI Fetch</TabsTrigger>
               <TabsTrigger value="listen">Listen</TabsTrigger>
               <TabsTrigger value="library">Audio Library</TabsTrigger>
-              <TabsTrigger value="radio">Radio</TabsTrigger>
               <TabsTrigger value="profile">Profile</TabsTrigger>
             </TabsList>
 
@@ -67,10 +65,6 @@ export default function Dashboard() {
 
             <TabsContent value="library" className="space-y-6">
               <AudioLibraryPage />
-            </TabsContent>
-
-            <TabsContent value="radio" className="space-y-6">
-              <RadioPage />
             </TabsContent>
 
             <TabsContent value="profile" className="space-y-6">
