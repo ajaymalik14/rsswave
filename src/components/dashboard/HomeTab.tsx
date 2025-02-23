@@ -1,8 +1,7 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Radio, RefreshCw } from "lucide-react";
+import { Radio, RefreshCw, Square } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -24,7 +23,13 @@ export function HomeTab() {
   const [currentStatus, setCurrentStatus] = useState<string>("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { setCurrentPlayingArticle, setPlayerQueue, setIsPlayingAll, setCurrentQueueIndex } = useAudioPlayer();
+  const { 
+    setCurrentPlayingArticle, 
+    setPlayerQueue, 
+    setIsPlayingAll, 
+    setCurrentQueueIndex,
+    currentPlayingArticle 
+  } = useAudioPlayer();
 
   const fetchArticles = async () => {
     const { data, error } = await supabase
@@ -149,7 +154,21 @@ export function HomeTab() {
     }
   };
 
+  const stopRadio = () => {
+    setIsProcessing(false);
+    setCurrentStatus("");
+    setCurrentPlayingArticle(null);
+    setPlayerQueue([]);
+    setCurrentQueueIndex(0);
+    setIsPlayingAll(false);
+  };
+
   const startRadio = async () => {
+    if (currentPlayingArticle) {
+      stopRadio();
+      return;
+    }
+
     if (!articles || articles.length === 0) {
       toast({
         variant: "destructive",
@@ -204,6 +223,11 @@ export function HomeTab() {
                 <>
                   <RefreshCw className="h-5 w-5 animate-spin" />
                   Processing...
+                </>
+              ) : currentPlayingArticle ? (
+                <>
+                  <Square className="h-5 w-5" />
+                  Stop Radio
                 </>
               ) : (
                 <>
