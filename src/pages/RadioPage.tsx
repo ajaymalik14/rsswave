@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
+import { useNavigate } from "react-router-dom";
 
 type RadioCategory = "News" | "Technology" | "Business" | "Entertainment" | "Sports" | "Science" | "Education";
 
@@ -53,6 +54,7 @@ export default function RadioPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [isCreating, setIsCreating] = useState(false);
   const [currentTag, setCurrentTag] = useState('');
   const [form, setForm] = useState<StationForm>({
@@ -243,11 +245,12 @@ export default function RadioPage() {
         title: "Processing Complete",
         description: "All articles have been processed and are ready for playback.",
       });
+      queryClient.invalidateQueries({ queryKey: ['radio-articles'] });
       return;
     }
 
     const article = articles[index];
-    const progress = (index / total) * 100;
+    const progress = ((index + 1) / total) * 100;
     setCurrentProgress(progress);
 
     try {
@@ -256,9 +259,17 @@ export default function RadioPage() {
         await supabase.functions.invoke("generate-transcript", {
           body: { articleId: article.id }
         });
+        
+        await new Promise(resolve => setTimeout(resolve, 2000));
       }
 
-      if (!article.audio_url) {
+      const { data: updatedArticle } = await supabase
+        .from('articles')
+        .select('*')
+        .eq('id', article.id)
+        .single();
+
+      if (updatedArticle && updatedArticle.transcript && !updatedArticle.audio_url) {
         setIsProcessing(`Converting to audio: ${article.title}`);
         await supabase.functions.invoke("generate-audio", {
           body: {
@@ -267,6 +278,8 @@ export default function RadioPage() {
             articleId: article.id
           }
         });
+        
+        await new Promise(resolve => setTimeout(resolve, 2000));
       }
 
       setTimeout(() => processNextArticle(articles, index + 1, total), 100);
@@ -617,84 +630,98 @@ export default function RadioPage() {
         {stations?.map(station => (
           <Card key={station.id} className="p-6">
             <div className="space-y-4">
-              {station.image_url && (
-                <img
-                  src={station.image_url}
-                  alt={station.name}
-                  className="w-full h-48 object-cover rounded"
-                />
-              )}
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="text-lg font-semibold">{station.name}</h3>
-                  {station.category && (
-                    <div className="text-sm text-muted-foreground mt-1">
-                      Category: {station.category}
-                    </div>
-                  )}
-                  {station.tags && station.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {station.tags.map(tag => (
-                        <div
-                          key={tag}
-                          className="flex items-center gap-1 bg-secondary text-secondary-foreground px-2 py-1 rounded-md text-sm"
-                        >
-                          <Tag className="h-3 w-3" />
-                          <span>{tag}</span>
+              <div 
+                className="cursor-pointer" 
+                onClick={() => navigate(`/dashboard/radio/${station.id}`)}
+              >
+                {station.image_url && (
+                  <img
+                    src={station.image_url}
+                    alt={station.name}
+                    className="w-full h-48 object-cover rounded"
+                  />
+                )}
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="text-lg font-semibold">{station.name}</h3>
+                    {station.category && (
+                      <div className="text-sm text-muted-foreground mt-1">
+                        Category: {station.category}
+                      </div>
+                    )}
+                    {station.tags && station.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {station.tags.map(tag => (
+                          <div
+                            key={tag}
+                            className="flex items-center gap-1 bg-secondary text-secondary-foreground px-2 py-1 rounded-md text-sm"
+                          >
+                            <Tag className="h-3 w-3" />
+                            <span>{tag}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <div className="mt-2 text-sm text-muted-foreground">
+                      {feeds?.filter(f => f.radio_station_id === station.id).map(feed => (
+                        <div key={feed.id}>
+                          {feed.title}
                         </div>
                       ))}
                     </div>
-                  )}
-                  <div className="mt-2 text-sm text-muted-foreground">
-                    {feeds?.filter(f => f.radio_station_id === station.id).map(feed => (
-                      <div key={feed.id}>
-                        {feed.title}
-                      </div>
-                    ))}
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        startEditing(station);
+                      }}
+                    >
+                      <Edit2 className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteStationMutation.mutate(station.id);
+                      }}
+                      disabled={deleteStationMutation.isPending}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="mt-4">
                   <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => startEditing(station)}
+                    className="w-full gap-2"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      startStation(station.id);
+                    }}
+                    disabled={!feeds?.some(f => f.radio_station_id === station.id)}
                   >
-                    <Edit2 className="h-4 w-4" />
+                    {isProcessing ? (
+                      <>
+                        <Square className="h-4 w-4" />
+                        Stop Processing
+                      </>
+                    ) : (
+                      <>
+                        <Radio className="h-4 w-4" />
+                        Start Station
+                      </>
+                    )}
                   </Button>
-                  <Button
-                    variant="destructive"
-                    size="icon"
-                    onClick={() => deleteStationMutation.mutate(station.id)}
-                    disabled={deleteStationMutation.isPending}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-              <div className="mt-4">
-                <Button
-                  className="w-full gap-2"
-                  onClick={() => startStation(station.id)}
-                  disabled={!feeds?.some(f => f.radio_station_id === station.id)}
-                >
-                  {isProcessing && station.id === isProcessing ? (
-                    <>
-                      <Square className="h-4 w-4" />
-                      Stop Processing
-                    </>
-                  ) : (
-                    <>
-                      <Radio className="h-4 w-4" />
-                      Start Station
-                    </>
+                  {isProcessing && (
+                    <div className="mt-2 space-y-2">
+                      <Progress value={currentProgress} className="w-full" />
+                      <p className="text-sm text-muted-foreground">{isProcessing}</p>
+                    </div>
                   )}
-                </Button>
-                {isProcessing && (
-                  <div className="mt-2 space-y-2">
-                    <Progress value={currentProgress} className="w-full" />
-                    <p className="text-sm text-muted-foreground">{isProcessing}</p>
-                  </div>
-                )}
+                </div>
               </div>
             </div>
           </Card>
