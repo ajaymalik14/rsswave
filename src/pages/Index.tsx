@@ -24,7 +24,7 @@ const Index = () => {
         <div className="flex justify-between items-center">
           <div className="flex items-center">
             <Radio className="h-8 w-8 text-primary mr-2" />
-            <span className="text-2xl font-bold text-gray-900">Hearrss</span>
+            <span className="text-2xl font-bold text-gray-900">Rsswave</span>
           </div>
           <div className="space-x-4">
             <Button asChild variant="ghost">
@@ -114,7 +114,7 @@ const Index = () => {
             <span className="font-semibold text-gray-900">Hearrss</span>
           </div>
           <p className="text-sm text-gray-600">
-            © {new Date().getFullYear()} Hearrss. All rights reserved.
+            © {new Date().getFullYear()} RssWave. All rights reserved.
           </p>
         </div>
       </footer>
