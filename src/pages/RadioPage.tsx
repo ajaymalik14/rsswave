@@ -4,11 +4,12 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
-import { Plus, Trash2, Edit2, Loader2, X, Tag } from "lucide-react";
+import { Plus, Trash2, Edit2, Loader2, X, Tag, Radio, Square } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Progress } from "@/components/ui/progress";
 
 type RadioCategory = "News" | "Technology" | "Business" | "Entertainment" | "Sports" | "Science" | "Education";
 
@@ -26,6 +27,18 @@ interface RadioFeed {
   title: string;
   url: string;
   radio_station_id: string;
+}
+
+interface Article {
+  id: string;
+  title: string;
+  content: string | null;
+  url: string;
+  feed_title: string | null;
+  published_at: string;
+  audio_url: string | null;
+  transcript: string | null;
+  feed_id: string;
 }
 
 interface StationForm {
@@ -51,6 +64,8 @@ export default function RadioPage() {
   });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [editingStation, setEditingStation] = useState<RadioStation | null>(null);
+  const [isProcessing, setIsProcessing] = useState<string | null>(null);
+  const [currentProgress, setCurrentProgress] = useState(0);
 
   const { data: stations, isLoading } = useQuery({
     queryKey: ['radio-stations'],
@@ -86,6 +101,19 @@ export default function RadioPage() {
       if (error) throw error;
       return data as RadioFeed[];
     }
+  });
+
+  const { data: profile } = useQuery({
+    queryKey: ["profile"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
   });
 
   const stationMutation = useMutation({
@@ -206,6 +234,121 @@ export default function RadioPage() {
       });
     }
   });
+
+  const processNextArticle = async (articles: Article[], index: number, total: number) => {
+    if (index >= articles.length) {
+      setIsProcessing(null);
+      setCurrentProgress(100);
+      toast({
+        title: "Processing Complete",
+        description: "All articles have been processed and are ready for playback.",
+      });
+      return;
+    }
+
+    const article = articles[index];
+    const progress = (index / total) * 100;
+    setCurrentProgress(progress);
+
+    try {
+      if (!article.transcript) {
+        setIsProcessing(`Generating transcript for: ${article.title}`);
+        await supabase.functions.invoke("generate-transcript", {
+          body: { articleId: article.id }
+        });
+      }
+
+      if (!article.audio_url) {
+        setIsProcessing(`Converting to audio: ${article.title}`);
+        await supabase.functions.invoke("generate-audio", {
+          body: {
+            voice_id: "21m00Tcm4TlvDq8ikWAM",
+            model_id: "eleven_multilingual_v2",
+            articleId: article.id
+          }
+        });
+      }
+
+      setTimeout(() => processNextArticle(articles, index + 1, total), 100);
+    } catch (error) {
+      console.error("Error processing article:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: `Failed to process article: ${article.title}`,
+      });
+      setTimeout(() => processNextArticle(articles, index + 1, total), 100);
+    }
+  };
+
+  const startStation = async (stationId: string) => {
+    if (!profile?.elevenlabs_api_key) {
+      toast({
+        variant: "destructive",
+        title: "ElevenLabs API Key Required",
+        description: "Please set up your ElevenLabs API key in the Profile tab first.",
+      });
+      return;
+    }
+
+    if (isProcessing) {
+      setIsProcessing(null);
+      setCurrentProgress(0);
+      return;
+    }
+
+    setIsProcessing("Fetching articles...");
+    setCurrentProgress(0);
+
+    const { data: stationFeeds } = await supabase
+      .from('radio_feeds')
+      .select('*')
+      .eq('radio_station_id', stationId);
+
+    if (!stationFeeds || stationFeeds.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "No feeds found",
+        description: "This radio station has no feeds configured.",
+      });
+      setIsProcessing(null);
+      return;
+    }
+
+    try {
+      for (const feed of stationFeeds) {
+        await supabase.functions.invoke('fetch-articles', {
+          body: { feedId: feed.id }
+        });
+      }
+
+      const { data: articles, error } = await supabase
+        .from('articles')
+        .select('*')
+        .order('published_at', { ascending: false });
+
+      if (error || !articles || articles.length === 0) {
+        setIsProcessing(null);
+        toast({
+          variant: "destructive",
+          title: "No articles found",
+          description: "Could not fetch any articles from the feeds.",
+        });
+        return;
+      }
+
+      setIsProcessing("Starting processing...");
+      processNextArticle(articles, 0, articles.length);
+    } catch (error) {
+      console.error("Error starting station:", error);
+      setIsProcessing(null);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to start the radio station.",
+      });
+    }
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -527,6 +670,31 @@ export default function RadioPage() {
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
+              </div>
+              <div className="mt-4">
+                <Button
+                  className="w-full gap-2"
+                  onClick={() => startStation(station.id)}
+                  disabled={!feeds?.some(f => f.radio_station_id === station.id)}
+                >
+                  {isProcessing && station.id === isProcessing ? (
+                    <>
+                      <Square className="h-4 w-4" />
+                      Stop Processing
+                    </>
+                  ) : (
+                    <>
+                      <Radio className="h-4 w-4" />
+                      Start Station
+                    </>
+                  )}
+                </Button>
+                {isProcessing && (
+                  <div className="mt-2 space-y-2">
+                    <Progress value={currentProgress} className="w-full" />
+                    <p className="text-sm text-muted-foreground">{isProcessing}</p>
+                  </div>
+                )}
               </div>
             </div>
           </Card>
