@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { SkipBack, SkipForward, Play, Pause } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface Article {
     id: string;
@@ -43,6 +44,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
 }) => {
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
+    const queryClient = useQueryClient();
 
     const formatTime = (seconds: number): string => {
         const minutes = Math.floor(seconds / 60);
@@ -64,10 +66,17 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     };
 
     const markArticleAsListened = async (articleId: string) => {
-        await supabase
+        const { error } = await supabase
             .from('articles')
             .update({ listened: true })
             .eq('id', articleId);
+            
+        if (error) {
+            console.error('Error marking article as listened:', error);
+            return;
+        }
+        
+        await queryClient.invalidateQueries({ queryKey: ['articles'] });
     };
 
     useEffect(() => {
@@ -76,8 +85,8 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
             if (isPlayingAll) {
                 playerAudioRef.current
                     .play()
-                    .catch(() => {
-                        // Silently handle the error
+                    .catch((error) => {
+                        console.error('Error playing audio:', error);
                     });
             }
         }
@@ -122,8 +131,8 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
                                 if (playerAudioRef.current) {
                                     if (playerAudioRef.current.paused) {
                                         playerAudioRef.current.play()
-                                            .catch(() => {
-                                                // Silently handle the error
+                                            .catch((error) => {
+                                                console.error('Error playing audio:', error);
                                             });
                                     } else {
                                         playerAudioRef.current.pause();
@@ -167,6 +176,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
                             setDuration(e.currentTarget.duration)
                         }
                         onEnded={async () => {
+                            console.log('Audio ended, marking as listened:', currentPlayingArticle.id);
                             await markArticleAsListened(currentPlayingArticle.id);
                             
                             if (currentQueueIndex < playerQueue.length - 1) {
