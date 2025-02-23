@@ -155,6 +155,65 @@ export type Database = {
         }
         Relationships: []
       }
+      radio_feeds: {
+        Row: {
+          created_at: string | null
+          id: string
+          radio_station_id: string
+          title: string
+          url: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          radio_station_id: string
+          title: string
+          url: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          radio_station_id?: string
+          title?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "radio_feeds_radio_station_id_fkey"
+            columns: ["radio_station_id"]
+            isOneToOne: false
+            referencedRelation: "radio_stations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      radio_stations: {
+        Row: {
+          created_at: string | null
+          id: string
+          image_url: string | null
+          name: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          image_url?: string | null
+          name: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          image_url?: string | null
+          name?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
