@@ -26,17 +26,19 @@ export function HomeTab() {
   const queryClient = useQueryClient();
   const { setCurrentPlayingArticle, setPlayerQueue, setIsPlayingAll, setCurrentQueueIndex } = useAudioPlayer();
 
+  const fetchArticles = async () => {
+    const { data, error } = await supabase
+      .from("articles")
+      .select("*")
+      .order("published_at", { ascending: false });
+
+    if (error) throw error;
+    return data as Article[];
+  };
+
   const { data: articles } = useQuery({
     queryKey: ["articles"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("articles")
-        .select("*")
-        .order("published_at", { ascending: false });
-
-      if (error) throw error;
-      return data as Article[];
-    },
+    queryFn: fetchArticles,
   });
 
   const { data: profile } = useQuery({
@@ -95,7 +97,10 @@ export function HomeTab() {
     // Skip if article already has transcript and audio
     if (article.transcript && article.audio_url) {
       // Update queue with the ready article
-      const updatedArticles = await queryClient.fetchQuery(["articles"]);
+      const updatedArticles = await queryClient.fetchQuery({
+        queryKey: ["articles"],
+        queryFn: fetchArticles,
+      });
       if (Array.isArray(updatedArticles)) {
         setPlayerQueue(updatedArticles.filter(a => a.audio_url));
       }
