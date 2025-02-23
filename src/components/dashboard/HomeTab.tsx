@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -86,8 +87,8 @@ export function HomeTab() {
     },
   });
 
-  const processNextArticle = async (articles: Article[], index: number) => {
-    if (index >= articles.length) {
+  const processNextArticle = async (currentArticles: Article[], index: number) => {
+    if (index >= currentArticles.length) {
       setIsProcessing(false);
       setCurrentStatus("All articles processed!");
       toast({
@@ -97,21 +98,7 @@ export function HomeTab() {
       return;
     }
 
-    const article = articles[index];
-
-    // Skip if article already has transcript and audio
-    if (article.transcript && article.audio_url) {
-      // Update queue with the ready article
-      const updatedArticles = await queryClient.fetchQuery({
-        queryKey: ["articles"],
-        queryFn: fetchArticles,
-      });
-      if (Array.isArray(updatedArticles)) {
-        setPlayerQueue(updatedArticles.filter(a => a.audio_url));
-      }
-      await processNextArticle(articles, index + 1);
-      return;
-    }
+    const article = currentArticles[index];
 
     try {
       // Generate transcript if needed
@@ -127,21 +114,27 @@ export function HomeTab() {
         await generateAudioMutation.mutateAsync({ articleId: article.id });
         await queryClient.invalidateQueries({ queryKey: ["articles"] });
 
-        // Get the updated article data
+        // Get the updated article data and update the queue
         const { data: updatedArticles } = await supabase
           .from("articles")
           .select("*")
           .order("published_at", { ascending: false });
 
         if (updatedArticles) {
-          // Update the player queue with all articles that have audio
           const articlesWithAudio = updatedArticles.filter(a => a.audio_url);
           setPlayerQueue(articlesWithAudio);
+
+          // If this is the first article with audio, start playing
+          if (articlesWithAudio.length === 1) {
+            setCurrentPlayingArticle(articlesWithAudio[0]);
+            setCurrentQueueIndex(0);
+            setIsPlayingAll(true);
+          }
         }
       }
 
-      // Process next article
-      await processNextArticle(articles, index + 1);
+      // Process next article in background
+      setTimeout(() => processNextArticle(currentArticles, index + 1), 0);
     } catch (error) {
       console.error("Error processing article:", error);
       toast({
@@ -150,7 +143,7 @@ export function HomeTab() {
         description: `Failed to process article: ${article.title}`,
       });
       // Continue with next article despite error
-      await processNextArticle(articles, index + 1);
+      setTimeout(() => processNextArticle(currentArticles, index + 1), 0);
     }
   };
 
@@ -169,15 +162,6 @@ export function HomeTab() {
       return;
     }
 
-    if (!articles || articles.length === 0) {
-      toast({
-        variant: "destructive",
-        title: "No articles found",
-        description: "Please add some feeds and fetch articles first.",
-      });
-      return;
-    }
-
     if (!profile?.elevenlabs_api_key) {
       toast({
         variant: "destructive",
@@ -187,13 +171,26 @@ export function HomeTab() {
       return;
     }
 
+    // Fetch latest articles
+    const { data: latestArticles, error } = await supabase
+      .from("articles")
+      .select("*")
+      .order("published_at", { ascending: false });
+
+    if (error || !latestArticles || latestArticles.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "No articles found",
+        description: "Please add some feeds and fetch articles first.",
+      });
+      return;
+    }
+
     setIsProcessing(true);
     setCurrentStatus("Starting radio processing...");
 
-    // Find articles that already have audio
-    const articlesWithAudio = articles.filter(article => article.audio_url);
-    
-    // If we have any articles with audio, start playing them immediately
+    // Start with any articles that already have audio
+    const articlesWithAudio = latestArticles.filter(article => article.audio_url);
     if (articlesWithAudio.length > 0) {
       setPlayerQueue(articlesWithAudio);
       setCurrentPlayingArticle(articlesWithAudio[0]);
@@ -201,8 +198,8 @@ export function HomeTab() {
       setIsPlayingAll(true);
     }
 
-    // Start processing remaining articles in the background
-    processNextArticle(articles, 0);
+    // Start processing all articles (including ones with audio - they'll be skipped if already processed)
+    processNextArticle(latestArticles, 0);
   };
 
   return (
