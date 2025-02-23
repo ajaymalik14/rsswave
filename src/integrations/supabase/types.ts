@@ -17,6 +17,7 @@ export type Database = {
           feed_id: string
           feed_title: string | null
           id: string
+          listened: boolean | null
           published_at: string
           title: string
           transcript: string | null
@@ -30,6 +31,7 @@ export type Database = {
           feed_id: string
           feed_title?: string | null
           id?: string
+          listened?: boolean | null
           published_at?: string
           title: string
           transcript?: string | null
@@ -43,6 +45,7 @@ export type Database = {
           feed_id?: string
           feed_title?: string | null
           id?: string
+          listened?: boolean | null
           published_at?: string
           title?: string
           transcript?: string | null

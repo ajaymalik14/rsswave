@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { SkipBack, SkipForward, Play, Pause } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Article {
     id: string;
@@ -40,7 +41,6 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     setPlayerQueue,
     setCurrentQueueIndex
 }) => {
-
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
 
@@ -61,6 +61,13 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
 
         playerAudioRef.current.currentTime = newTime;
         setCurrentTime(newTime);
+    };
+
+    const markArticleAsListened = async (articleId: string) => {
+        await supabase
+            .from('articles')
+            .update({ listened: true })
+            .eq('id', articleId);
     };
 
     useEffect(() => {
@@ -159,7 +166,9 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
                         onLoadedMetadata={(e) =>
                             setDuration(e.currentTarget.duration)
                         }
-                        onEnded={() => {
+                        onEnded={async () => {
+                            await markArticleAsListened(currentPlayingArticle.id);
+                            
                             if (currentQueueIndex < playerQueue.length - 1) {
                                 onPlayNext();
                             } else {
@@ -177,4 +186,4 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     );
 };
 
-export default AudioPlayer; 
+export default AudioPlayer;

@@ -1,8 +1,9 @@
+
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { FileAudio, FileText, Trash2 } from "lucide-react";
+import { FileAudio, FileText, Trash2, Radio } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,6 +25,7 @@ interface Article {
   published_at: string;
   audio_url: string | null;
   transcript: string | null;
+  listened: boolean;
 }
 
 interface ArticleCardProps {
@@ -47,16 +49,21 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
           onCheckedChange={() => onToggleSelection(article.id)}
         />
         <div className="flex-1 flex items-center justify-between">
-          <h3 className="font-semibold">
-            <a
-              href={article.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-blue-600 transition-colors"
-            >
-              {article.title}
-            </a>
-          </h3>
+          <div className="flex items-center gap-2">
+            {article.listened && (
+              <Radio className="h-4 w-4 text-green-500" />
+            )}
+            <h3 className="font-semibold">
+              <a
+                href={article.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-blue-600 transition-colors"
+              >
+                {article.title}
+              </a>
+            </h3>
+          </div>
           <div className="flex items-center gap-4">
             {article.transcript && (
               <span
@@ -103,4 +110,4 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
   );
 };
 
-export default ArticleCard; 
+export default ArticleCard;
