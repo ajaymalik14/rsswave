@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,7 @@ export function ProfileTab() {
   const [newPassword, setNewPassword] = useState('');
   const [username, setUsername] = useState('');
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
   const { data: profile, isLoading: profileLoading } = useQuery({
@@ -39,14 +40,32 @@ export function ProfileTab() {
     enabled: !!user,
   });
 
+  // Set initial username from profile data
+  useEffect(() => {
+    if (profile?.username) {
+      setUsername(profile.username);
+    }
+  }, [profile]);
+
+  // Handle image preview
+  useEffect(() => {
+    if (avatarFile) {
+      const objectUrl = URL.createObjectURL(avatarFile);
+      setPreviewUrl(objectUrl);
+      return () => URL.revokeObjectURL(objectUrl);
+    }
+  }, [avatarFile]);
+
   const updateProfileMutation = useMutation({
     mutationFn: async (values: { username?: string; avatar_url?: string }) => {
-      const { error } = await supabase
+      console.log('Updating profile with values:', values);
+      const { data, error } = await supabase
         .from('profiles')
         .update(values)
         .eq('id', user?.id);
 
       if (error) throw error;
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
@@ -56,6 +75,7 @@ export function ProfileTab() {
       });
     },
     onError: (error) => {
+      console.error('Profile update error:', error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -65,7 +85,7 @@ export function ProfileTab() {
   });
 
   const handleUpdateProfile = async () => {
-    if (!username) return;
+    if (!username || !user?.id) return;
 
     updateProfileMutation.mutate({ username });
   };
@@ -116,7 +136,9 @@ export function ProfileTab() {
       // Update profile with new avatar URL
       updateProfileMutation.mutate({ avatar_url: publicUrl });
       setAvatarFile(null);
+      setPreviewUrl(null);
     } catch (error: any) {
+      console.error('Avatar upload error:', error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -142,7 +164,13 @@ export function ProfileTab() {
             <Label>Profile Picture</Label>
             <div className="flex items-center gap-4">
               <div className="relative h-20 w-20 rounded-full overflow-hidden bg-gray-100">
-                {profile?.avatar_url ? (
+                {previewUrl ? (
+                  <img 
+                    src={previewUrl} 
+                    alt="Preview" 
+                    className="h-full w-full object-cover"
+                  />
+                ) : profile?.avatar_url ? (
                   <img 
                     src={profile.avatar_url} 
                     alt="Profile" 
