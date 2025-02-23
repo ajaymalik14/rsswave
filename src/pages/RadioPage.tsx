@@ -11,12 +11,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
+type RadioCategory = "News" | "Technology" | "Business" | "Entertainment" | "Sports" | "Science" | "Education";
+
 interface RadioStation {
   id: string;
   name: string;
   image_url: string | null;
   created_at: string;
-  category: string | null;
+  category: RadioCategory | null;
   tags: string[];
 }
 
@@ -30,7 +32,7 @@ interface RadioFeed {
 interface StationForm {
   name: string;
   image: File | null;
-  category: string;
+  category: RadioCategory | '';
   tags: string[];
   feeds: { title: string; url: string }[];
 }
@@ -73,7 +75,7 @@ export default function RadioPage() {
         .rpc('get_radio_categories');
       
       if (error) throw error;
-      return data as string[];
+      return data.map(item => item.category) as RadioCategory[];
     }
   });
 
@@ -116,7 +118,7 @@ export default function RadioPage() {
 
       const stationData = {
         name: formData.name,
-        category: formData.category,
+        category: formData.category || null,
         tags: formData.tags,
         ...(imageUrl && { image_url: imageUrl }),
         user_id: user.id
