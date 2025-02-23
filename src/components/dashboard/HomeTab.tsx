@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,6 +19,11 @@ interface Article {
   transcript: string | null;
 }
 
+interface Profile {
+  id: string;
+  elevenlabs_api_key: string | null;
+}
+
 export function HomeTab() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentStatus, setCurrentStatus] = useState<string>("");
@@ -30,6 +36,20 @@ export function HomeTab() {
     setCurrentQueueIndex,
     currentPlayingArticle 
   } = useAudioPlayer();
+
+  // Add back the profile query
+  const { data: profile } = useQuery({
+    queryKey: ["profile"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .single();
+
+      if (error) throw error;
+      return data as Profile;
+    },
+  });
 
   const fetchArticlesMutation = useMutation({
     mutationFn: async (feedId: string) => {
