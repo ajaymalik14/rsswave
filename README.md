@@ -1,69 +1,132 @@
-# Welcome to your Lovable project
 
-## Project info
+# RssWave - Your Personal AI Radio Station
 
-**URL**: https://lovable.dev/projects/d5c812a9-9140-4bcf-a188-5d5f5e33780f
+RssWave is an innovative web application that transforms RSS feeds into personalized audio content using AI technology. It allows users to convert any RSS feed into a customizable radio station, offering an ad-free, noise-free listening experience. The platform leverages advanced AI technology (Gemini and ElevenLabs) to convert text content into natural-sounding audio, letting users choose from various voices and control playback speeds.
 
-## How can I edit this code?
+## Demo
 
-There are several ways of editing your application.
+[Demo](https://www.rsswave.com/)
 
-**Use Lovable**
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/d5c812a9-9140-4bcf-a188-5d5f5e33780f) and start prompting.
+## Tech Stack
 
-Changes made via Lovable will be committed automatically to this repo.
+**Frontend:**
+- [React](https://react.dev) - UI library
+- [TypeScript](https://www.typescriptlang.org/) - Type-safe JavaScript
+- [Tailwind CSS](https://tailwindcss.com) - Styling
+- [shadcn/ui](https://ui.shadcn.com/) - UI component library
+- [Framer Motion](https://www.framer.com/motion/) - Animations
+- [React Query](https://tanstack.com/query/latest) - Data fetching and state management
+- [Lucide React](https://lucide.dev) - Icon library
 
-**Use your preferred IDE**
+**Backend:**
+- [Supabase](https://supabase.com) - Backend as a Service
+  - Authentication
+  - Database
+  - Storage
+  - Edge Functions
+- [ElevenLabs](https://elevenlabs.io) - Text-to-speech API
+- [Gemini AI](https://deepmind.google/technologies/gemini/) - Text processing
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+**Development Tools:**
+- [Vite](https://vitejs.dev) - Build tool and dev server
+- [ESLint](https://eslint.org) - Code linting
+- [PostCSS](https://postcss.org) - CSS processing
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## Features
 
-Follow these steps:
+- 🎙️ AI-Powered Audio Conversion
+  - Convert any RSS article to natural-sounding audio
+  - Multiple voice options via ElevenLabs integration
+  - Smart text processing with Gemini AI
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+- 📱 Modern User Experience
+  - Clean, responsive design
+  - Dark/light mode support
+  - Smooth animations and transitions
+  - Mobile-friendly interface
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+- 📻 Advanced Playback Controls
+  - Queue management for continuous listening
+  - Playback speed control
+  - Progress tracking across articles
+  - Batch conversion support
 
-# Step 3: Install the necessary dependencies.
-npm i
+- 📊 Feed Management
+  - Multiple RSS feed support
+  - Feed organization and categorization
+  - Curated feed suggestions
+  - Easy feed addition and removal
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+- 🔐 Secure User Experience
+  - User authentication via Supabase
+  - Personal API key management
+  - Secure audio storage
+  - Cross-device synchronization
+## Installation
+
+1. Clone the repository
+```bash
+git clone https://github.com/ajaymalik14/rsswave.git
+cd rsswave
+```
+
+2. Install dependencies
+```bash
+npm install
+```
+
+3. Set up environment variables
+```bash
+# Create a .env file in the root directory and add the following:
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+4. Start the development server
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+5. Build for production
+```bash
+npm run build
+```
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Prerequisites
+- Node.js 16.x or higher
+- npm 7.x or higher
+- A Supabase account
+- A Google Cloud account (for Gemini AI)
+- An ElevenLabs account
 
-**Use GitHub Codespaces**
+### Environment Variables
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+To run this project, you will need to add the following environment variables to your .env file:
 
-## What technologies are used for this project?
+`VITE_SUPABASE_URL`=your-project-url.supabase.co
+`VITE_SUPABASE_ANON_KEY`=your-anon-key ## FAQ
 
-This project is built with .
+#### How does RssWave convert text to audio?
+RssWave uses a combination of Gemini AI for text processing and ElevenLabs for voice synthesis. The platform first processes your RSS feed content through Gemini AI to optimize it for audio conversion, then uses ElevenLabs' advanced text-to-speech technology to create natural-sounding audio.
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+#### Can I customize the voice and speed of the audio?
+Yes! RssWave offers multiple voice options powered by ElevenLabs AI. You can select different voices and adjust playback speeds to match your preferences. The platform provides full control over voice selection and audio playback settings.
 
-## How can I deploy this project?
+#### Is there a limit to how many RSS feeds I can add?
+No, there's no limit to the number of RSS feeds you can add to your RssWave account. You can convert articles from any number of RSS feeds into audio format, making it easy to build your personal audio library from multiple sources.
 
-Simply open [Lovable](https://lovable.dev/projects/d5c812a9-9140-4bcf-a188-5d5f5e33780f) and click on Share -> Publish.
+#### Do I need to provide my own API keys?
+Yes, RssWave requires you to provide your own Gemini and ElevenLabs API keys for security and billing purposes. This ensures you have full control over your usage and costs. You can easily add these API keys in your dashboard settings.
 
-## I want to use a custom domain - is that possible?
+#### Can I listen to my audio content offline?
+Currently, RssWave requires an internet connection to stream your audio content. However, you can access your converted articles from any device with an internet connection, and the audio plays without any advertisements or interruptions.
+## Authors
 
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+- [@ajaymalik14](https://github.com/ajaymalik14/)
+
+
+## Feedback
+
+If you have any feedback, please reach out to me  at [@ajaymalikpro](https://x.com/ajaymalikpro)
+
