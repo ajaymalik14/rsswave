@@ -24,7 +24,7 @@ export function HomeTab() {
   const [currentStatus, setCurrentStatus] = useState<string>("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { setCurrentPlayingArticle, setPlayerQueue } = useAudioPlayer();
+  const { setCurrentPlayingArticle, setPlayerQueue, setIsPlayingAll, setCurrentQueueIndex } = useAudioPlayer();
 
   const { data: articles } = useQuery({
     queryKey: ["articles"],
@@ -94,6 +94,11 @@ export function HomeTab() {
 
     // Skip if article already has transcript and audio
     if (article.transcript && article.audio_url) {
+      // Update queue with the ready article
+      const updatedArticles = await queryClient.fetchQuery(["articles"]);
+      if (Array.isArray(updatedArticles)) {
+        setPlayerQueue(updatedArticles.filter(a => a.audio_url));
+      }
       await processNextArticle(articles, index + 1);
       return;
     }
@@ -111,6 +116,18 @@ export function HomeTab() {
         setCurrentStatus(`Converting to audio: ${article.title}`);
         await generateAudioMutation.mutateAsync({ articleId: article.id });
         await queryClient.invalidateQueries({ queryKey: ["articles"] });
+
+        // Get the updated article data
+        const { data: updatedArticles } = await supabase
+          .from("articles")
+          .select("*")
+          .order("published_at", { ascending: false });
+
+        if (updatedArticles) {
+          // Update the player queue with all articles that have audio
+          const articlesWithAudio = updatedArticles.filter(a => a.audio_url);
+          setPlayerQueue(articlesWithAudio);
+        }
       }
 
       // Process next article
@@ -149,7 +166,18 @@ export function HomeTab() {
     setIsProcessing(true);
     setCurrentStatus("Starting radio processing...");
 
-    // Start processing articles in the background
+    // Find articles that already have audio
+    const articlesWithAudio = articles.filter(article => article.audio_url);
+    
+    // If we have any articles with audio, start playing them immediately
+    if (articlesWithAudio.length > 0) {
+      setPlayerQueue(articlesWithAudio);
+      setCurrentPlayingArticle(articlesWithAudio[0]);
+      setCurrentQueueIndex(0);
+      setIsPlayingAll(true);
+    }
+
+    // Start processing remaining articles in the background
     processNextArticle(articles, 0);
   };
 
