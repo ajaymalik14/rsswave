@@ -11,6 +11,7 @@ import AudioLibraryPage from "./AudioLibraryPage";
 import ExplorePage from "./ExplorePage";
 import { AudioPlayerProvider } from "@/contexts/AudioPlayerContext";
 import { HomeTab } from "@/components/dashboard/HomeTab";
+import { ProfileTab } from "@/components/dashboard/ProfileTab";
 
 export default function Dashboard() {
   const { signOut } = useAuth();
@@ -35,6 +36,7 @@ export default function Dashboard() {
               <TabsTrigger value="ai">AI Fetch</TabsTrigger>
               <TabsTrigger value="listen">Listen</TabsTrigger>
               <TabsTrigger value="library">Audio Library</TabsTrigger>
+              <TabsTrigger value="profile">Profile</TabsTrigger>
             </TabsList>
 
             <TabsContent value="home" className="space-y-6">
@@ -48,17 +50,25 @@ export default function Dashboard() {
             <TabsContent value="feeds" className="space-y-6">
               <FeedsPage />
             </TabsContent>
+
             <TabsContent value="articles" className="space-y-4">
               <ArticlesPage />
             </TabsContent>
+
             <TabsContent value="ai" className="space-y-6">
               <AIFetchPage />
             </TabsContent>
+
             <TabsContent value="listen" className="space-y-6">
               <ListenPage />
             </TabsContent>
+
             <TabsContent value="library" className="space-y-6">
               <AudioLibraryPage />
+            </TabsContent>
+
+            <TabsContent value="profile" className="space-y-6">
+              <ProfileTab />
             </TabsContent>
           </Tabs>
         </div>
