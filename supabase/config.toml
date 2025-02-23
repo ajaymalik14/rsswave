@@ -1,0 +1,6 @@
+
+[functions.fetch-articles]
+verify_jwt = true
+
+[functions.generate-transcript]
+verify_jwt = true
