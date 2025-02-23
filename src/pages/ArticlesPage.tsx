@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from "react";
+
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Trash2 } from "lucide-react";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Trash2, Loader2 } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,6 +28,7 @@ interface Article {
   published_at: string;
   audio_url: string | null;
   transcript: string | null;
+  listened: boolean;
 }
 
 export default function ArticlesPage() {
@@ -49,7 +50,8 @@ export default function ArticlesPage() {
           feed_title,
           published_at,
           audio_url,
-          transcript
+          transcript,
+          listened
         `
         )
         .order("published_at", { ascending: false });
@@ -188,4 +190,4 @@ export default function ArticlesPage() {
       )}
     </>
   );
-} 
+}
